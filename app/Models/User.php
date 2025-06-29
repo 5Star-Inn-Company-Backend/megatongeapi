@@ -18,9 +18,19 @@ class User extends Authenticatable
      * @var list<string>
      */
     protected $fillable = [
-        'name',
+        'firstname',
+        'lastname',
         'email',
-        'password',
+        'address',
+        'phone',
+        'city',
+        'state',
+        'company',
+        'website',
+        'notification',
+        'receive_invoice',
+        'api_key',
+        'password'
     ];
 
     /**
@@ -44,5 +54,9 @@ class User extends Authenticatable
             'email_verified_at' => 'datetime',
             'password' => 'hashed',
         ];
+    }
+
+    public function history(){
+        return $this->hasMany(History::class);
     }
 }
