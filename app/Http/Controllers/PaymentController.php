@@ -30,8 +30,6 @@ class PaymentController extends Controller
                 env('STRIPE_SECRET'),
             );
 
-            // \Stripe\Stripe::setApiKey("sk_test_BQokikJOvBiI2HlWgH4olfQ2");
-
             $res =   $stripe->tokens->create(array(
                 "card" => array(
                     "number" => $request->number,
@@ -100,13 +98,13 @@ class PaymentController extends Controller
         }else{
             $amount = 0 * 1;
         }
-        
+
         // Read the Paystack secret key from .env
         $secretKey = env('PAYSTACK_SECRET_KEY');
 
         $url = "https://api.paystack.co/transaction/initialize";
 
-      
+
         $fields = [
             'email' => Auth::user()->email,
             'amount' => $amount,
