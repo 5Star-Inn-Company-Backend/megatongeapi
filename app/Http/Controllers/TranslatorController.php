@@ -59,7 +59,7 @@ class TranslatorController extends Controller
         if ($validator->fails()) {
             return response()->json([
                 "status_code" => 422,
-                "message" => "Validation failed",
+                "message" => implode(",",$validator->errors()->all()),
                 "errors" => $validator->errors(),
             ]);
         }

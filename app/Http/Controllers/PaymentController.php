@@ -2,8 +2,10 @@
 
 namespace App\Http\Controllers;
 
+use App\Models\pricing;
 use Exception;
 use Carbon\Carbon;
+use Illuminate\Support\Facades\Validator;
 use Stripe\Stripe;
 use App\Models\User;
 use App\Models\history;
@@ -90,14 +92,37 @@ class PaymentController extends Controller
 
     public function paystackpayment(Request $request)
     {
-        // $input = $request->amount * 1;
-        if($request->amount == 'silver'){
-            $amount = 2400 * 1;
-        }elseif($request->amount == 'gold'){
-            $amount = 4800 * 1;
-        }else{
-            $amount = 0 * 1;
+
+        // Validate the request data
+        $validator = Validator::make($request->all(), [
+            'plan' => 'required|int',
+        ]);
+
+        if ($validator->fails()) {
+            return response()->json([
+                "status_code" => 422,
+                "message" => implode(",",$validator->errors()->all()),
+                "errors" => $validator->errors(),
+            ]);
         }
+        $price = pricing::find($request->plan);
+
+        if(!$price){
+            return response()->json([
+                "status_code" => 422,
+                "message" => "Invalid Plan ID"
+            ]);
+        }
+
+
+        if($price->amount == 0){
+            return response()->json([
+                "status_code" => 422,
+                "message" => "You cannot pay on free plan"
+            ]);
+        }
+
+        $amount = $price->amount * 100;
 
         // Read the Paystack secret key from .env
         $secretKey = env('PAYSTACK_SECRET_KEY');
@@ -108,6 +133,15 @@ class PaymentController extends Controller
         $fields = [
             'email' => Auth::user()->email,
             'amount' => $amount,
+            "metadata" => [
+                "custom_fields" =>[
+                    [
+                    "display_name" => "From",
+                    "variable_name" => "from",
+                    "value" => "Megatongue"
+                  ]
+                ]
+            ]
         ];
 
         $fields_string = http_build_query($fields);
@@ -124,6 +158,7 @@ class PaymentController extends Controller
             "Cache-Control: no-cache",
         ));
         curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
+        curl_setopt($ch, CURLOPT_SSL_VERIFYPEER, false);
 
         // Execute the cURL request
         $result = curl_exec($ch);
@@ -168,6 +203,7 @@ class PaymentController extends Controller
             "Cache-Control: no-cache",
         ]);
         curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
+        curl_setopt($ch, CURLOPT_SSL_VERIFYPEER, false);
 
         $verificationResult = curl_exec($ch);
 
