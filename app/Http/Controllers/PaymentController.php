@@ -133,12 +133,18 @@ class PaymentController extends Controller
         $fields = [
             'email' => Auth::user()->email,
             'amount' => $amount,
+            'callback_url' => route('handlePaymentCallback'),
             "metadata" => [
                 "custom_fields" =>[
                     [
                     "display_name" => "From",
                     "variable_name" => "from",
                     "value" => "Megatongue"
+                  ],
+                    [
+                    "display_name" => "mtplan",
+                    "variable_name" => "mtplan",
+                    "value" => "$request->plan"
                   ]
                 ]
             ]
@@ -222,15 +228,7 @@ class PaymentController extends Controller
         // Extract relevant payment details from the Paystack verification response
         $paymentData = $decodedVerificationResult['data'];
 
-        $subscriptionplan = ""; // Initialize as an integer
-
-        if ($paymentData['amount'] == 2400) {
-            $subscriptionplan = "Silver";
-        } elseif ($paymentData['amount'] == 4800) {
-            $subscriptionplan = "Gold";
-        } else {
-            $subscriptionplan = "Free";
-        }
+        $subscriptionplan = $paymentData['metadata']['custom_fields'][1]['value'];
 
 
         // Find the authenticated user's ID based on their email
@@ -239,6 +237,9 @@ class PaymentController extends Controller
         if (!$user) {
             return response()->json(['error' => 'User not found'], 404);
         }
+
+        $user->plan=$subscriptionplan;
+        $user->save();
 
 
         // Update the stripepayment table with payment details
@@ -254,11 +255,13 @@ class PaymentController extends Controller
             'payment_type' => $paymentData['authorization']['channel'],
         ]);
 
+        return redirect()->away(env('FRONTEND_URL').'/app/pricing');
+
         // Return a JSON response with payment details
-        return response()->json([
-            'message' => 'Payment successful',
-            'payment_type' => $paymentData
-        ]);
+//        return response()->json([
+//            'message' => 'Payment successful',
+//            'payment_type' => $paymentData
+//        ]);
     }
 
     public function getpaymentmethod()
@@ -281,7 +284,7 @@ class PaymentController extends Controller
     public function getsubscribplan()
     {
         $userId = Auth::user()->id;
-        $getpayment = stripepayment::where('user_id', $userId)->first(); // Use first() instead of get()
+        $getpayment = stripepayment::where('user_id', $userId)->latest()->first(); // Use first() instead of get()
 
         if ($getpayment) {
             // Calculate the renew date by adding one month to the dateofpayment
@@ -293,11 +296,13 @@ class PaymentController extends Controller
                 'end' => $renewDate->format('Y-m-d H:i:s'),
             ];
 
-            $apiusage = history::where('user_id', $userId)->get();
+            $apiusage = history::where('user_id', $userId);
+
+            $pricing=pricing::find($getpayment->subscriptionplan);
 
             return response()->json([
                 "status" => true,
-                "subscription plan" => $getpayment->subscriptionplan,
+                "subscription plan" => strtoupper($pricing->name),
                 "Renew" => $renewDate->format('Y-m-d H:i:s'),
                 'Billing period' => $billingPeriod,
                 'Api usage' => $apiusage->count()

@@ -16,4 +16,4 @@ Route::get('/login', function () {
 Route::get('resetpass', [UserController::class, 'resetpass']);
 Route::post('updatepassword', [UserController::class, 'updatepass']);
 
-Route::get('handlePaymentCallback', [PaymentController::class,'handlePaymentCallback']);
+Route::get('handlePaymentCallback', [PaymentController::class,'handlePaymentCallback'])->name('handlePaymentCallback');

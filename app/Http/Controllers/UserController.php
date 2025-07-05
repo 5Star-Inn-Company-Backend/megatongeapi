@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use App\Models\stripepayment;
 use Carbon\Carbon;
 use App\Models\User;
 use Illuminate\Support\Str;
@@ -177,10 +178,10 @@ class UserController extends Controller
       public function getuserinfo()
       {
           $userinfo = User::find(Auth::user()->id)->get();
-  
+
           foreach($userinfo as $userinfos)    {
               $notifi = [];
-  
+
               if($userinfos->notification == 1)
               {
                   $notifi[] = "subscribe";
@@ -188,7 +189,7 @@ class UserController extends Controller
                   $notifi[] = "unsubscribe";
               }
           }
-  
+
           if($userinfos)
           {
               return response()->json([
@@ -197,6 +198,7 @@ class UserController extends Controller
                   "lastname" => $userinfos->lastname,
                   "email" => $userinfos->email,
                   "company" => $userinfos->company,
+                  "plan" => $userinfos->plan,
                   "notification" => $notifi
               ]);
           }
@@ -212,14 +214,14 @@ class UserController extends Controller
               'phone', 'city', 'state', 'company',
               'website', 'notification', 'recieve_invoice'
           ];
-      
+
           // Loop through the fillable fields and update them if present in the request
           foreach ($fillableCoulums as $coulum) {
               if ($request->has($coulum)) {
                   $updateuser->$coulum = $request->$coulum;
               }
           }
-      
+
           if ($updateuser->save()) {
               return response()->json([
                   "status" => true,
@@ -232,6 +234,6 @@ class UserController extends Controller
               ], 422);
           }
       }
-      
-      
+
+
 }
