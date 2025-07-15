@@ -29,7 +29,7 @@ class AppServiceProvider extends ServiceProvider
         });
 
         RateLimiter::for('freeTranslation', function (Request $request) {
-            return Limit::perHour(5)->by($request->ip());
+            return Limit::perHour(50)->by($request->ip());
         });
     }
 }

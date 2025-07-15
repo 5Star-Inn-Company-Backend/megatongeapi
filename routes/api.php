@@ -61,6 +61,7 @@ Route::group(['middleware' => 'auth:sanctum'], function (){
     Route::get('getpaymentmethod', [PaymentController::class, 'getpaymentmethod']);
     Route::get('getsubscribplan', [PaymentController::class, 'getsubscribplan']);
 
-    Route::post("translator", [MegaController::class, 'translator']);
-    Route::post('translatefile', [MegaController::class, 'translatefile']);
 });
+
+Route::post("translator", [MegaController::class, 'translator']);
+Route::post('translatefile', [MegaController::class, 'translatefile']);
