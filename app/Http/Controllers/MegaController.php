@@ -7,6 +7,7 @@ use App\Models\User;
 use App\Models\review;
 use App\Models\history;
 use App\Models\pricing;
+use Carbon\Carbon;
 use Illuminate\Support\Str;
 use Illuminate\Http\Request;
 use OpenApi\Annotations as OA;
@@ -396,32 +397,28 @@ class MegaController extends Controller
     public function getapiusage(Request $request)
     {
         $userId = Auth::user()->id;
-        $apiusage = history::where('user_id', $userId)->get();
+        $apiusage = history::where('user_id', $userId)->whereBetween('created_at',[
+            Carbon::now()->startOfMonth(),Carbon::now()->endOfMonth(),
+        ])->count();
+        $pricing=pricing::find(Auth::user()->plan);
 
-        if ($apiusage->count() > 0) {
-            return response()->json([
-                "status" => true,
-                "message" => $apiusage->count(),
-                "date" => $apiusage->first()->created_at,
-            ], 200);
-        } else {
-            return response()->json([
-                "status" => true,
-                "message" => "You have not made any request in the last month!",
-            ], 200);
-        }
+        return response()->json([
+            "status" => true,
+            "message" => $apiusage,
+            "limit" => $pricing->max_limit,
+            "date" => Carbon::now()->startOfMonth()
+        ], 200);
     }
 
 
     public function getapikey()
     {
-        $userkey = User::find(Auth::user()->id)->get();
-        foreach ($userkey as $apikey) {
-        }
+        $apikey=Auth::user()->api_key;
+
         if ($apikey) {
             return response()->json([
                 "status" => true,
-                "message" => $apikey->api_key,
+                "message" => $apikey,
             ], 200);
         } else {
             return response()->json([
