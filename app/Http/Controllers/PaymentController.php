@@ -302,15 +302,22 @@ class PaymentController extends Controller
 
             return response()->json([
                 "status" => true,
-                "subscription plan" => strtoupper($pricing->name),
-                "Renew" => $renewDate->format('Y-m-d H:i:s'),
-                'Billing period' => $billingPeriod,
-                'Api usage' => $apiusage->count()
+                "subscription_plan" => strtoupper($pricing->name),
+                "renew" => $renewDate->format('Y-m-d H:i:s'),
+                'billing_period' => $billingPeriod,
+                'api_usage' => $apiusage->count()
             ], 200);
         } else {
+            $pricing=pricing::find(Auth::user()->plan);
+            $billingPeriod = [
+                'start' => Carbon::now()->startOfMonth(),
+                'end' => Carbon::now()->endOfMonth(),
+            ];
             return response()->json([
                 "status" => true,
-                "message" => "You don't have a payment method, you are probably on free mode"
+                "message" => "You don't have a payment method, you are probably on free mode",
+                "subscription_plan" => strtoupper($pricing->name),
+                'billing_period' => $billingPeriod,
             ], 200);
         }
     }

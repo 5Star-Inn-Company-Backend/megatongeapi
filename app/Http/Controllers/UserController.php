@@ -33,7 +33,8 @@ class UserController extends Controller
             'firstname' => $request->firstname,
             'lastname' => $request->lastname,
             'email' => $request->email,
-            'password' => Hash::make($request->password)
+            'password' => Hash::make($request->password),
+            'api_key' => uniqid().rand(0000000,9999999)
         ]);
 
 
