@@ -41,6 +41,8 @@ Route::get('/clear', function (Request $request) {
 
 Route::get('pricing', [PricingController::class, 'index']);
 
+Route::post('newsletter', [PricingController::class, 'newsletter']);
+
 Route::group(['middleware' => 'auth:sanctum'], function (){
     Route::post('apikey', [MegaController::class, 'apikey']);
     Route::post('pricing', [PricingController::class, 'pricing']);

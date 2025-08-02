@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use App\Models\Newsletter;
 use App\Models\pricing;
 use Illuminate\Http\Request;
 
@@ -37,5 +38,31 @@ class PricingController extends Controller
             "message" => $price,
         ]);
     }
+
+
+    public function newsletter(Request $request)
+    {
+        $request->validate([
+            "email" => "required"
+        ]);
+
+        if(Newsletter::where('email', $request->email)->exists()){
+            return response()->json([
+                "statusCode" => 400,
+                "message" => "You have already subscribed to our Newsletter",
+            ]);
+        }
+
+        $nw = new Newsletter;
+        $nw->email = $request->email;
+        $nw->save();
+
+        return response()->json([
+            "statusCode" => 200,
+            "message" => "You have successfully subscribed to our Newsletter",
+            "data" => $nw
+        ]);
+    }
+
 
 }
