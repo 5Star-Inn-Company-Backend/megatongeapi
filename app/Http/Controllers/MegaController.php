@@ -91,6 +91,28 @@ class MegaController extends Controller
             ]);
         }
 
+        if ($user->plan == 1) {
+            return response()->json([
+                "status_code" => 401,
+                "message" => "API usage not available in free mode."
+            ]);
+        }
+
+        if($user->plan < 3) {
+            $apiusage = history::where('user_id', $user->id)->whereBetween('created_at', [
+                Carbon::now()->startOfMonth(), Carbon::now()->endOfMonth(),
+            ])->count();
+            $pricing = pricing::find($user->plan);
+
+
+            if ($apiusage > $pricing->max_limit) {
+                return response()->json([
+                    "status_code" => 401,
+                    "message" => "API usage limit exceeded."
+                ]);
+            }
+        }
+
         // Validate the request data
         $validator = Validator::make($request->all(), [
             'q' => 'required',
@@ -128,6 +150,8 @@ class MegaController extends Controller
             CURLOPT_HTTP_VERSION => CURL_HTTP_VERSION_1_1,
             CURLOPT_CUSTOMREQUEST => 'POST',
             CURLOPT_POSTFIELDS => $json_data,
+            CURLOPT_SSL_VERIFYHOST => false,
+            CURLOPT_SSL_VERIFYPEER => false,
             CURLOPT_HTTPHEADER => array(
                 'Content-Type: application/json',
                 'Cookie: session=edb08a19-057b-46e5-bd9e-00346901cf2e'
@@ -185,17 +209,17 @@ class MegaController extends Controller
     /**
      * @OA\Post(
      *     path="/api/translatefile",
-     *     summary="Translate and save CSV file content",
+     *     summary="Translate and save DOC file content",
      *     tags={"Translation"},
      *     @OA\RequestBody(
-     *         description="CSV File to Translate",
+     *         description="DOC File to Translate",
      *         required=true,
      *         @OA\MediaType(
      *             mediaType="multipart/form-data",
      *             @OA\Schema(
      *                 @OA\Property(
      *                     property="csvfile",
-     *                     description="CSV file to translate",
+     *                     description="DOC file to translate",
      *                     type="file",
      *                 ),
      *             ),
@@ -203,7 +227,7 @@ class MegaController extends Controller
      *     ),
      *     @OA\Response(
      *         response="200",
-     *         description="CSV file translated and saved successfully",
+     *         description="DOC file translated and saved successfully",
      *         @OA\JsonContent(
      *             @OA\Property(property="statusCode", type="integer", example=200),
      *             @OA\Property(property="message", type="string", example="CSV file translated and saved."),
@@ -292,6 +316,8 @@ class MegaController extends Controller
             CURLOPT_HTTP_VERSION => CURL_HTTP_VERSION_1_1,
             CURLOPT_CUSTOMREQUEST => 'POST',
             CURLOPT_POSTFIELDS => $filedata,
+            CURLOPT_SSL_VERIFYHOST => false,
+            CURLOPT_SSL_VERIFYPEER => false,
             CURLOPT_HTTPHEADER => array(
                 'Content-Type: multipart/form-data',
                 'Cookie: session=edb08a19-057b-46e5-bd9e-00346901cf2e'
@@ -405,7 +431,7 @@ class MegaController extends Controller
         return response()->json([
             "status" => true,
             "message" => $apiusage,
-            "limit" => $pricing->max_limit,
+            "limit" => $pricing->max_limit == 0 ? "Unlimited" : $pricing->max_limit,
             "date" => Carbon::now()->startOfMonth()
         ], 200);
     }
