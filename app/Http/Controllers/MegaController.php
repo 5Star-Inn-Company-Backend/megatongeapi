@@ -93,12 +93,12 @@ class MegaController extends Controller
             ]);
         }
 
-        if ($user->plan == 1) {
-            return response()->json([
-                "status_code" => 401,
-                "message" => "API usage not available in free mode."
-            ]);
-        }
+//        if ($user->plan == 1) {
+//            return response()->json([
+//                "status_code" => 401,
+//                "message" => "API usage not available in free mode."
+//            ]);
+//        }
 
         if($user->plan < 3) {
             $apiusage = history::where('user_id', $user->id)->whereBetween('created_at', [
