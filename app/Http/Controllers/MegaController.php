@@ -8,6 +8,8 @@ use App\Models\review;
 use App\Models\history;
 use App\Models\pricing;
 use Carbon\Carbon;
+use Illuminate\Support\Facades\Log;
+use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Str;
 use Illuminate\Http\Request;
 use OpenApi\Annotations as OA;
@@ -307,7 +309,7 @@ class MegaController extends Controller
         $curl = curl_init();
 
         curl_setopt_array($curl, array(
-            CURLOPT_URL => env('TRANSLATOR_BASEURL', 'http://translator.cheapmailing.com.ng') . '/translate_file',
+            CURLOPT_URL => env('TRANSLATOR_BASEURL') . '/translate_file',
             CURLOPT_RETURNTRANSFER => true,
             CURLOPT_ENCODING => '',
             CURLOPT_MAXREDIRS => 10,
@@ -328,6 +330,8 @@ class MegaController extends Controller
 
         curl_close($curl);
 
+        Log::info(json_encode($filedata)." - File Translation Response: " . $response);
+
         $decoded_response = json_decode($response, true);
 
         if (isset($decoded_response['error'])){
@@ -339,7 +343,7 @@ class MegaController extends Controller
 
         // Check if the decoded_response contains the 'translatedText' key
         if (isset($decoded_response['translatedFileUrl'])) {
-            $translated_text = $decoded_response['translatedFileUrl'];
+            $translated_text = str_replace(env('TRANSLATOR_BASEURL_D'),env('APP_URL'),$decoded_response['translatedFileUrl']);
         } else {
             $translated_text = 'Translation not available.';
         }

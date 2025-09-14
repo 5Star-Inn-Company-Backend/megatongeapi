@@ -176,7 +176,7 @@ class TranslatorController extends Controller
         $curl = curl_init();
 
         curl_setopt_array($curl, array(
-            CURLOPT_URL => env('TRANSLATOR_BASEURL', 'http://translator.cheapmailing.com.ng') . '/translate_file',
+            CURLOPT_URL => env('TRANSLATOR_BASEURL') . '/translate_file',
             CURLOPT_RETURNTRANSFER => true,
             CURLOPT_ENCODING => '',
             CURLOPT_MAXREDIRS => 10,
@@ -199,7 +199,7 @@ class TranslatorController extends Controller
 
         // Check if the decoded_response contains the 'translatedText' key
         if (isset($decoded_response['translatedFileUrl'])) {
-            $translated_text = file_get_contents($decoded_response['translatedFileUrl']);
+            $translated_text = str_replace(env('TRANSLATOR_BASEURL_D'),env('APP_URL'),$decoded_response['translatedFileUrl']);
         } else {
             $translated_text = 'Translation not available.';
         }
@@ -210,7 +210,7 @@ class TranslatorController extends Controller
         $data->source_language = $request->source;
         $data->destination_language = $request->target;
         $data->format = "file";
-        $data->response = $decoded_response['translatedFileUrl'];
+        $data->response = $translated_text;
 
 //             $user->history()->save($data);
 
